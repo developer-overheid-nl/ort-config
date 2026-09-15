@@ -3,6 +3,35 @@
 This repository contains [configuration files](https://github.com/oss-review-toolkit/ort#configuration-files) for the
 [OSS Review Toolkit](https://github.com/oss-review-toolkit/ort).
 
+## OSS-register: basisregels
+
+In [evaluator.rules.kts](evaluator.rules.kts) is alleen `ossRegisterBaselineRules()` actief.
+Dit profiel roept de bestaande README-, LICENSE-, CONTRIBUTING- en CI-regels aan, aangevuld met vier nieuwe regels.
+De aanroepen van de overige policygroepen zijn uitgecomment; hun definities en de overige configuratie blijven behouden.
+
+| Controle | Melding bij ontbreken |
+| --- | --- |
+| README.md aanwezig | ERROR |
+| LICENSE aanwezig | ERROR |
+| publiccode.yml of publiccode.yaml aanwezig | ERROR |
+| CONTRIBUTING.md aanwezig | ERROR |
+| SECURITY.md aanwezig | ERROR |
+| CODE_OF_CONDUCT.md aanwezig | WARNING |
+| CHANGELOG / CHANGELOG.md aanwezig | WARNING |
+| CI-configuratie aanwezig | WARNING |
+
+De bestaande bestandsregels zoeken `README.md`, `LICENSE` en `CONTRIBUTING.md` in de root.
+Ook publiccode staat in de root. SECURITY, CODE_OF_CONDUCT en CHANGELOG mogen daarnaast in `.github/` of `docs/` staan.
+CHANGELOG wordt met of zonder `.md` en ongeacht hoofdletters herkend. De overige bestandsnamen zijn hoofdlettergevoelig.
+De CI-regel herkent bekende configuratiebestanden of -mappen; een ontbrekende CI geeft in dit profiel een waarschuwing.
+Deze regels controleren uitsluitend aanwezigheid, niet de inhoud of het slagen van CI-runs.
+
+Gebruik de bestaande Docker-commando's voor Analyzer, Advisor en Evaluator met
+`--rules-file /home/ort/.ort/config/evaluator.rules.kts`.
+Er zijn geen extra installatiecommando's of dependencies nodig voor deze basisregels.
+ORT haalt de repositoryrevisie uit het analyseresultaat op voor de bestandscontroles.
+Publiccode wordt in deze begintset alleen op aanwezigheid gecontroleerd.
+
 ## Content
 
 ### Curations

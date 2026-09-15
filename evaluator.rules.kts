@@ -1372,6 +1372,17 @@ fun RuleSet.genericInDependencyRule() = packageRule("GENERIC_IN_DEPENDENCY") {
     }
 }
 
+fun RuleSet.missingChangelogFileRule() = projectSourceRule("MISSING_CHANGELOG_FILE") {
+    // ORT supports a regex in a path pattern: accept CHANGELOG with or without .md, ignoring case.
+    val filePattern = "{file:(?i:changelog(?:\\.md)?)}"
+
+    require {
+        -projectSourceHasFile(filePattern, ".github/$filePattern", "docs/$filePattern")
+    }
+
+    warning("The project's code repository does not contain a 'CHANGELOG' or 'CHANGELOG.md' file.")
+}
+
 fun RuleSet.missingCiConfigurationRule() = projectSourceRule("MISSING_CI_CONFIGURATION") {
     require {
         -AnyOf(
@@ -1388,10 +1399,18 @@ fun RuleSet.missingCiConfigurationRule() = projectSourceRule("MISSING_CI_CONFIGU
         )
     }
 
-    error(
+    warning(
         message = "This project does not have any known CI configuration files.",
         howToFix = "Please setup a CI. If you already have setup a CI and the error persists, please contact support."
     )
+}
+
+fun RuleSet.missingCodeOfConductFileRule() = projectSourceRule("MISSING_CODE_OF_CONDUCT_FILE") {
+    require {
+        -projectSourceHasFile("CODE_OF_CONDUCT.md", ".github/CODE_OF_CONDUCT.md", "docs/CODE_OF_CONDUCT.md")
+    }
+
+    warning("The project's code repository does not contain the file 'CODE_OF_CONDUCT.md'.")
 }
 
 fun RuleSet.missingContributingFileRule() = projectSourceRule("MISSING_CONTRIBUTING_FILE") {
@@ -1426,6 +1445,14 @@ fun RuleSet.missingLicenseFileRule() = projectSourceRule("MISSING_LICENSE_FILE")
     )
 }
 
+fun RuleSet.missingPubliccodeFileRule() = projectSourceRule("MISSING_PUBLICCODE_FILE") {
+    require {
+        -projectSourceHasFile("publiccode.yml", "publiccode.yaml")
+    }
+
+    error("The project's code repository does not contain a 'publiccode.yml' or 'publiccode.yaml' file.")
+}
+
 fun RuleSet.missingReadmeFileRule() = projectSourceRule("MISSING_README_FILE") {
     require {
         -projectSourceHasFile("README.md")
@@ -1444,6 +1471,14 @@ fun RuleSet.missingReadmeFileLicenseSectionRule() = projectSourceRule("MISSING_R
         message = "The file 'README.md' is missing a \"License\" section.",
         howToFix = "Please add a \"License\" section to the file 'README.md'."
     )
+}
+
+fun RuleSet.missingSecurityFileRule() = projectSourceRule("MISSING_SECURITY_FILE") {
+    require {
+        -projectSourceHasFile("SECURITY.md", ".github/SECURITY.md", "docs/SECURITY.md")
+    }
+
+    error("The project's code repository does not contain the file 'SECURITY.md'.")
 }
 
 fun RuleSet.missingTestsRule() = projectSourceRule("MISSING_TESTS") {
@@ -1783,12 +1818,27 @@ fun RuleSet.proprietaryProjectRules() {
     unstatedInDependencyRule()
 }
 
+// OSS-register basisprofiel 0.1.0, voor ORT 92.4.0.
+fun RuleSet.ossRegisterBaselineRules() {
+    missingReadmeFileRule()
+    missingLicenseFileRule()
+    missingPubliccodeFileRule()
+    missingContributingFileRule()
+    missingSecurityFileRule()
+    missingCodeOfConductFileRule()
+    missingChangelogFileRule()
+    missingCiConfigurationRule()
+}
+
 val ruleSet = ruleSet(ortResult, licenseInfoResolver, resolutionProvider) {
-    commonRules()
-    when (getEnabledPolicyRules()) {
-        PolicyRules.PROPRIETARY_PROJECT -> proprietaryProjectRules()
-        PolicyRules.OSS_PROJECT -> ossProjectRules()
-    }
+    ossRegisterBaselineRules()
+
+    // Bestaande policy uitgeschakeld voor de eerste opzet van het OSS-register.
+    // commonRules()
+    // when (getEnabledPolicyRules()) {
+    //     PolicyRules.PROPRIETARY_PROJECT -> proprietaryProjectRules()
+    //     PolicyRules.OSS_PROJECT -> ossProjectRules()
+    // }
 }
 
 // Populate the list of policy rule violations to return.
