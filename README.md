@@ -37,54 +37,6 @@ ghcr.io/developer-overheid-nl/ort-config:v0.1.0
 ghcr.io/developer-overheid-nl/ort-config:<commit-sha>
 ```
 
-Gebruik voor productie een release-tag of image-digest. Het image kopieert standaard
-`evaluator.rules.kts` naar een volume dat op `/target` is gemount.
-
-### Lokaal zonder checkout
-
-```sh
-docker volume create ort-config
-docker run --rm \
-  -v ort-config:/target \
-  ghcr.io/developer-overheid-nl/ort-config:v0.1.0
-
-docker run --rm --init \
-  --user "$(id -u):$(id -g)" \
-  --env-file .env.local \
-  -e HOME=/tmp \
-  -v ort-config:/config:ro \
-  -v "$PWD/output:/output" \
-  ort-runner:dev
-```
-
-Vervang `v0.1.0` door de gewenste release. Opnieuw uitvoeren overschrijft de ruleset
-in het volume met de gekozen versie.
-
-### Kubernetes
-
-Gebruik het config-image als init container en deel een `emptyDir` met de runner:
-
-```yaml
-volumes:
-  - name: ort-config
-    emptyDir: {}
-
-initContainers:
-  - name: ort-config
-    image: ghcr.io/developer-overheid-nl/ort-config:v0.1.0
-    volumeMounts:
-      - name: ort-config
-        mountPath: /target
-
-containers:
-  - name: ort-runner
-    image: ghcr.io/developer-overheid-nl/ort-runner:VERSION
-    volumeMounts:
-      - name: ort-config
-        mountPath: /config
-        readOnly: true
-```
-
 ## Ontwikkelen en testen
 
 Pull requests bouwen het image en controleren dat dit exact `evaluator.rules.kts`
