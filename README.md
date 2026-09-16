@@ -6,11 +6,12 @@ This repository contains [configuration files](https://github.com/oss-review-too
 ## OSS-register: basisregels
 
 In [evaluator.rules.kts](evaluator.rules.kts) is alleen `ossRegisterBaselineRules()` actief.
-Dit profiel roept de bestaande README-, LICENSE-, CONTRIBUTING- en CI-regels aan, aangevuld met vier nieuwe regels.
+Dit profiel roept de bestaande kwetsbaarheids-, README-, LICENSE-, CONTRIBUTING- en CI-regels aan, aangevuld met vier nieuwe regels.
 De aanroepen van de overige policygroepen zijn uitgecomment; hun definities en de overige configuratie blijven behouden.
 
-| Controle | Melding bij ontbreken |
+| Controle | Melding |
 | --- | --- |
+| Bekende kwetsbaarheid in een dependency | WARNING |
 | README.md aanwezig | ERROR |
 | LICENSE aanwezig | ERROR |
 | publiccode.yml of publiccode.yaml aanwezig | ERROR |
@@ -25,6 +26,14 @@ Ook publiccode staat in de root. SECURITY, CODE_OF_CONDUCT en CHANGELOG mogen da
 CHANGELOG wordt met of zonder `.md` en ongeacht hoofdletters herkend. De overige bestandsnamen zijn hoofdlettergevoelig.
 De CI-regel herkent bekende configuratiebestanden of -mappen; een ontbrekende CI geeft in dit profiel een waarschuwing.
 Deze regels controleren uitsluitend aanwezigheid, niet de inhoud of het slagen van CI-runs.
+
+De kwetsbaarheidsregel gebruikt de resultaten van Advisor. Met `advise -a OSV` geeft de
+Evaluator één `VULNERABILITY_IN_DEPENDENCY`-waarschuwing per dependency waarvoor OSV
+minstens één bekende kwetsbaarheid teruggeeft. De concrete advisory-ID's, referenties,
+beschikbare scores en eerste opgeloste versies staan in `advisor-result.yml`. De
+high-severityregel is niet actief, omdat de huidige matcher niet alle OSV-scoretypen
+ondersteunt. Een bekende kwetsbaarheid betekent bovendien niet automatisch dat het
+kwetsbare codepad door het project wordt gebruikt.
 
 Gebruik de bestaande Docker-commando's voor Analyzer, Advisor en Evaluator met
 `--rules-file /home/ort/.ort/config/evaluator.rules.kts`.
