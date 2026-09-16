@@ -1,51 +1,73 @@
-# ORT Config
+# DON ORT-configuratie
 
-This repository contains [configuration files](https://github.com/oss-review-toolkit/ort#configuration-files) for the
-[OSS Review Toolkit](https://github.com/oss-review-toolkit/ort).
+Deze repository bevat de basisregels waarmee de ORT-runner open-sourceprojecten
+uit het OSS-register controleert. De configuratie is bewust klein: de runner heeft
+alleen [`evaluator.rules.kts`](evaluator.rules.kts) nodig.
 
-## Content
+## Controles
 
-### Curations
+| Controle | Ernst |
+| --- | --- |
+| Bekende kwetsbaarheid in een dependency | WARNING |
+| `README.md` aanwezig | ERROR |
+| `LICENSE` aanwezig | ERROR |
+| `publiccode.yml` of `publiccode.yaml` aanwezig | ERROR |
+| `CONTRIBUTING.md` aanwezig | ERROR |
+| `SECURITY.md` aanwezig | ERROR |
+| `CODE_OF_CONDUCT.md` aanwezig | WARNING |
+| `CHANGELOG` of `CHANGELOG.md` aanwezig | WARNING |
+| Bekende CI-configuratie aanwezig | WARNING |
 
-The [curations](./curations/) directory contains
-[package curations](https://github.com/oss-review-toolkit/ort/blob/main/docs/config-file-curations-yml.md) for
-open source packages.
+`README.md`, `LICENSE`, `publiccode.yml` en `CONTRIBUTING.md` worden in de root
+verwacht. `SECURITY.md`, `CODE_OF_CONDUCT.md` en `CHANGELOG` mogen ook onder
+`.github/` of `docs/` staan. De changelognaam is hoofdletterongevoelig en mag de
+extensie `.md` hebben.
 
-Package curations submitted to this repository must adhere to the following rules:
+De kwetsbaarheidsregel gebruikt Advisor-resultaten van OSV. Details zoals advisory-ID,
+score en opgeloste versies staan in `advisor-result.yml` en worden door de runner ook
+in `run.json` opgenomen. De bestandsregels controleren aanwezigheid, niet de inhoud.
 
-* Declaring authors and concluded licenses is currently not allowed.
-* Declared license mappings must map licenses to valid SPDX expressions. The curation comment must provide proof that
-  the mapping is correct.
-* Curations that apply to whole namespaces by only setting the type and namespace of the identifier are not allowed.
-* The curation file path must be `curations/[type]/[namespace]/[name].yml`. If the namespace is empty, use "_". For
-  example a curation for the package `NuGet::Azure.Core:1.2.0` must be in the file `curation/NuGet/_/Azure.Core.yml`.
+## Configuratie-image
 
-Package configurations containing license finding curations or path excludes are not yet supported.
+Een semver-tag met de vorm `v*.*.*` start de releaseworkflow. Deze workflow test de
+ruleset, publiceert het image en maakt een GitHub Release. Het image verschijnt als:
 
-### Tools
-
-The [tools](./tools/) directory contains tools that help generating curations.
-
-## Usage
-
-To use the configuration provided by this repository, it needs to be cloned, and the files need to be passed to the
-respective options of the ORT CLI commands. For example, to use the curations with the ORT analyzer:
-
+```text
+ghcr.io/developer-overheid-nl/ort-config:v0.1.0
+ghcr.io/developer-overheid-nl/ort-config:<commit-sha>
 ```
-ort analyze --package-curations-dir [path-to-curations-dir]
+
+## Ontwikkelen en testen
+
+Pull requests bouwen het image en controleren dat dit exact `evaluator.rules.kts`
+naar het configuratievolume kopieert. Handmatig kan dezelfde imagebouw worden
+gecontroleerd met:
+
+```sh
+docker build -t ort-config:test .
+mkdir -p /tmp/ort-config-test
+docker run --rm -v /tmp/ort-config-test:/target ort-config:test
+test -s /tmp/ort-config-test/evaluator.rules.kts
 ```
 
-Using this repository together with ORT will be simplified in future.
+De runner is verantwoordelijk voor de compatibiliteitstest van de ruleset met zijn
+vastgezette ORT-versie.
 
-## Contribute
+## Releasen
 
-This repository is currently in incubation and not yet ready for contributions.
+Net als `don-register-common` gebruikt deze repository een semver Git-tag als trigger:
 
-# License
+```sh
+git checkout main
+git pull
+git tag v0.1.0
+git push origin v0.1.0
+```
 
-Copyright (C) 2019-2024 [The ORT Project Authors](./NOTICE).
+De workflow valideert de ruleset voordat het image en de GitHub Release worden
+gepubliceerd.
 
-See the [LICENSE](./LICENSE) file in the root of this project for license details.
+## Licentie
 
-OSS Review Toolkit (ORT) is a [Linux Foundation project](https://www.linuxfoundation.org) and part of
-[ACT](https://automatecompliance.org/).
+Deze repository is beschikbaar onder de Apache License 2.0. Zie [LICENSE](LICENSE)
+en [NOTICE](NOTICE).
