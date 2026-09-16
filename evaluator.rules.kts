@@ -1820,6 +1820,7 @@ fun RuleSet.proprietaryProjectRules() {
 
 // OSS-register basisprofiel 0.1.0, voor ORT 92.4.0.
 fun RuleSet.ossRegisterBaselineRules() {
+    vulnerabilityInDependencyRule()
     missingReadmeFileRule()
     missingLicenseFileRule()
     missingPubliccodeFileRule()
