@@ -67,14 +67,13 @@ jobs:
           git -C "$project" init --quiet
           git -C "$project" config user.name "ORT config test"
           git -C "$project" config user.email "ort-config@example.invalid"
+          git -C "$project" remote add origin file:///project
           git -C "$project" add .
           git -C "$project" commit --quiet -m "fixture"
 
           docker run --rm -v "${config}:/target" ort-config:test
 
           docker run --rm \
-            --user "$(id -u):$(id -g)" \
-            -e HOME=/tmp \
             -v "${project}:/project:ro" \
             -v "${output}:/output" \
             "$ORT_IMAGE" \
@@ -82,8 +81,6 @@ jobs:
             -i /project -o /output -f YAML
 
           docker run --rm \
-            --user "$(id -u):$(id -g)" \
-            -e HOME=/tmp \
             -v "${output}:/output" \
             "$ORT_IMAGE" \
             -P ort.forceOverwrite=true advise \
@@ -91,8 +88,7 @@ jobs:
 
           set +e
           docker run --rm \
-            --user "$(id -u):$(id -g)" \
-            -e HOME=/tmp \
+            -v "${project}:/project:ro" \
             -v "${config}:/config:ro" \
             -v "${output}:/output" \
             "$ORT_IMAGE" \
