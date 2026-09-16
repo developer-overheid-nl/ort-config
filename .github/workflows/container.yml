@@ -1,0 +1,155 @@
+name: Test and release
+
+on:
+  pull_request:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ORT_IMAGE: ghcr.io/oss-review-toolkit/ort:92.4.0@sha256:748afc9d459f6d2bb1dde90fe4bc378d8ea2c756f8c5e19607290ae42446a1d1
+
+jobs:
+  validate:
+    name: Validate configuration image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build configuration image
+        run: docker build --build-arg "SOURCE_REVISION=${GITHUB_SHA}" -t ort-config:test .
+
+      - name: Test Analyzer, Advisor and Evaluator
+        run: |
+          set -euo pipefail
+
+          test_root="${RUNNER_TEMP}/ort-config-test"
+          project="${test_root}/project"
+          config="${test_root}/config"
+          output="${test_root}/output"
+
+          mkdir -p "${project}/.github/workflows" "$config" "$output"
+          chmod -R a+rwx "$test_root"
+
+          cat > "${project}/README.md" <<'EOF'
+          # ORT configuration fixture
+          EOF
+          cat > "${project}/LICENSE" <<'EOF'
+          SPDX-License-Identifier: MIT
+          EOF
+          cat > "${project}/publiccode.yml" <<'EOF'
+          publiccodeYmlVersion: "0.5"
+          name: ort-config-fixture
+          EOF
+          cat > "${project}/CONTRIBUTING.md" <<'EOF'
+          # Contributing
+          EOF
+          cat > "${project}/CODE_OF_CONDUCT.md" <<'EOF'
+          # Code of conduct
+          EOF
+          cat > "${project}/CHANGELOG" <<'EOF'
+          Initial fixture.
+          EOF
+          cat > "${project}/.github/workflows/ci.yml" <<'EOF'
+          name: Fixture
+          on: workflow_dispatch
+          jobs: {}
+          EOF
+
+          git -C "$project" init --quiet
+          git -C "$project" config user.name "ORT config test"
+          git -C "$project" config user.email "ort-config@example.invalid"
+          git -C "$project" add .
+          git -C "$project" commit --quiet -m "fixture"
+
+          docker run --rm -v "${config}:/target" ort-config:test
+
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -e HOME=/tmp \
+            -v "${project}:/project:ro" \
+            -v "${output}:/output" \
+            "$ORT_IMAGE" \
+            -P ort.forceOverwrite=true analyze \
+            -i /project -o /output -f YAML
+
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -e HOME=/tmp \
+            -v "${output}:/output" \
+            "$ORT_IMAGE" \
+            -P ort.forceOverwrite=true advise \
+            -i /output/analyzer-result.yml -o /output -a OSV -f YAML
+
+          set +e
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -e HOME=/tmp \
+            -v "${config}:/config:ro" \
+            -v "${output}:/output" \
+            "$ORT_IMAGE" \
+            -P ort.forceOverwrite=true evaluate \
+            -i /output/advisor-result.yml -o /output \
+            --rules-file /config/evaluator.rules.kts -f YAML
+          evaluator_status=$?
+          set -e
+
+          if [[ "$evaluator_status" -ne 2 ]]; then
+            echo "Expected Evaluator exit code 2 for the missing SECURITY.md, got ${evaluator_status}." >&2
+            exit 1
+          fi
+
+          grep -Fq "MISSING_SECURITY_FILE" "${output}/evaluation-result.yml"
+
+  release:
+    name: Publish image and GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            SOURCE_REVISION=${{ github.sha }}
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: gh release create "$TAG_NAME" --title "$TAG_NAME" --generate-notes

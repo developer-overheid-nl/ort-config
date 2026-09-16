@@ -1,5 +1,0 @@
-- id: "NuGet:Azure:Core:"
-  curations:
-    comment: "The project resides in its own directory."
-    vcs:
-      path: "sdk/core/Azure.Core"

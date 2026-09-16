@@ -1,7 +1,3 @@
-# Build tools
-.gradle/
-build/
-
 # IDEs
 .idea/
 out/

@@ -1,89 +1,120 @@
-# ORT Config
+# DON ORT-configuratie
 
-This repository contains [configuration files](https://github.com/oss-review-toolkit/ort#configuration-files) for the
-[OSS Review Toolkit](https://github.com/oss-review-toolkit/ort).
+Deze repository bevat de basisregels waarmee de ORT-runner open-sourceprojecten
+uit het OSS-register controleert. De configuratie is bewust klein: de runner heeft
+alleen [`evaluator.rules.kts`](evaluator.rules.kts) nodig.
 
-## OSS-register: basisregels
+## Controles
 
-In [evaluator.rules.kts](evaluator.rules.kts) is alleen `ossRegisterBaselineRules()` actief.
-Dit profiel roept de bestaande kwetsbaarheids-, README-, LICENSE-, CONTRIBUTING- en CI-regels aan, aangevuld met vier nieuwe regels.
-De aanroepen van de overige policygroepen zijn uitgecomment; hun definities en de overige configuratie blijven behouden.
-
-| Controle | Melding |
+| Controle | Ernst |
 | --- | --- |
 | Bekende kwetsbaarheid in een dependency | WARNING |
-| README.md aanwezig | ERROR |
-| LICENSE aanwezig | ERROR |
-| publiccode.yml of publiccode.yaml aanwezig | ERROR |
-| CONTRIBUTING.md aanwezig | ERROR |
-| SECURITY.md aanwezig | ERROR |
-| CODE_OF_CONDUCT.md aanwezig | WARNING |
-| CHANGELOG / CHANGELOG.md aanwezig | WARNING |
-| CI-configuratie aanwezig | WARNING |
+| `README.md` aanwezig | ERROR |
+| `LICENSE` aanwezig | ERROR |
+| `publiccode.yml` of `publiccode.yaml` aanwezig | ERROR |
+| `CONTRIBUTING.md` aanwezig | ERROR |
+| `SECURITY.md` aanwezig | ERROR |
+| `CODE_OF_CONDUCT.md` aanwezig | WARNING |
+| `CHANGELOG` of `CHANGELOG.md` aanwezig | WARNING |
+| Bekende CI-configuratie aanwezig | WARNING |
 
-De bestaande bestandsregels zoeken `README.md`, `LICENSE` en `CONTRIBUTING.md` in de root.
-Ook publiccode staat in de root. SECURITY, CODE_OF_CONDUCT en CHANGELOG mogen daarnaast in `.github/` of `docs/` staan.
-CHANGELOG wordt met of zonder `.md` en ongeacht hoofdletters herkend. De overige bestandsnamen zijn hoofdlettergevoelig.
-De CI-regel herkent bekende configuratiebestanden of -mappen; een ontbrekende CI geeft in dit profiel een waarschuwing.
-Deze regels controleren uitsluitend aanwezigheid, niet de inhoud of het slagen van CI-runs.
+`README.md`, `LICENSE`, `publiccode.yml` en `CONTRIBUTING.md` worden in de root
+verwacht. `SECURITY.md`, `CODE_OF_CONDUCT.md` en `CHANGELOG` mogen ook onder
+`.github/` of `docs/` staan. De changelognaam is hoofdletterongevoelig en mag de
+extensie `.md` hebben.
 
-De kwetsbaarheidsregel gebruikt de resultaten van Advisor. Met `advise -a OSV` geeft de
-Evaluator één `VULNERABILITY_IN_DEPENDENCY`-waarschuwing per dependency waarvoor OSV
-minstens één bekende kwetsbaarheid teruggeeft. De concrete advisory-ID's, referenties,
-beschikbare scores en eerste opgeloste versies staan in `advisor-result.yml`. De
-high-severityregel is niet actief, omdat de huidige matcher niet alle OSV-scoretypen
-ondersteunt. Een bekende kwetsbaarheid betekent bovendien niet automatisch dat het
-kwetsbare codepad door het project wordt gebruikt.
+De kwetsbaarheidsregel gebruikt Advisor-resultaten van OSV. Details zoals advisory-ID,
+score en opgeloste versies staan in `advisor-result.yml` en worden door de runner ook
+in `run.json` opgenomen. De bestandsregels controleren aanwezigheid, niet de inhoud.
 
-Gebruik de bestaande Docker-commando's voor Analyzer, Advisor en Evaluator met
-`--rules-file /home/ort/.ort/config/evaluator.rules.kts`.
-Er zijn geen extra installatiecommando's of dependencies nodig voor deze basisregels.
-ORT haalt de repositoryrevisie uit het analyseresultaat op voor de bestandscontroles.
-Publiccode wordt in deze begintset alleen op aanwezigheid gecontroleerd.
+## Configuratie-image
 
-## Content
+Een semver-tag met de vorm `v*.*.*` start de releaseworkflow. Deze workflow test de
+ruleset, publiceert het image en maakt een GitHub Release. Het image verschijnt als:
 
-### Curations
-
-The [curations](./curations/) directory contains
-[package curations](https://github.com/oss-review-toolkit/ort/blob/main/docs/config-file-curations-yml.md) for
-open source packages.
-
-Package curations submitted to this repository must adhere to the following rules:
-
-* Declaring authors and concluded licenses is currently not allowed.
-* Declared license mappings must map licenses to valid SPDX expressions. The curation comment must provide proof that
-  the mapping is correct.
-* Curations that apply to whole namespaces by only setting the type and namespace of the identifier are not allowed.
-* The curation file path must be `curations/[type]/[namespace]/[name].yml`. If the namespace is empty, use "_". For
-  example a curation for the package `NuGet::Azure.Core:1.2.0` must be in the file `curation/NuGet/_/Azure.Core.yml`.
-
-Package configurations containing license finding curations or path excludes are not yet supported.
-
-### Tools
-
-The [tools](./tools/) directory contains tools that help generating curations.
-
-## Usage
-
-To use the configuration provided by this repository, it needs to be cloned, and the files need to be passed to the
-respective options of the ORT CLI commands. For example, to use the curations with the ORT analyzer:
-
-```
-ort analyze --package-curations-dir [path-to-curations-dir]
+```text
+ghcr.io/developer-overheid-nl/ort-config:v0.1.0
+ghcr.io/developer-overheid-nl/ort-config:<commit-sha>
 ```
 
-Using this repository together with ORT will be simplified in future.
+Gebruik voor productie een release-tag of image-digest. Het image kopieert standaard
+`evaluator.rules.kts` naar een volume dat op `/target` is gemount.
 
-## Contribute
+### Lokaal zonder checkout
 
-This repository is currently in incubation and not yet ready for contributions.
+```sh
+docker volume create ort-config
+docker run --rm \
+  -v ort-config:/target \
+  ghcr.io/developer-overheid-nl/ort-config:v0.1.0
 
-# License
+docker run --rm --init \
+  --user "$(id -u):$(id -g)" \
+  --env-file .env.local \
+  -e HOME=/tmp \
+  -v ort-config:/config:ro \
+  -v "$PWD/output:/output" \
+  ort-runner:dev
+```
 
-Copyright (C) 2019-2024 [The ORT Project Authors](./NOTICE).
+Vervang `v0.1.0` door de gewenste release. Opnieuw uitvoeren overschrijft de ruleset
+in het volume met de gekozen versie.
 
-See the [LICENSE](./LICENSE) file in the root of this project for license details.
+### Kubernetes
 
-OSS Review Toolkit (ORT) is a [Linux Foundation project](https://www.linuxfoundation.org) and part of
-[ACT](https://automatecompliance.org/).
+Gebruik het config-image als init container en deel een `emptyDir` met de runner:
+
+```yaml
+volumes:
+  - name: ort-config
+    emptyDir: {}
+
+initContainers:
+  - name: ort-config
+    image: ghcr.io/developer-overheid-nl/ort-config:v0.1.0
+    volumeMounts:
+      - name: ort-config
+        mountPath: /target
+
+containers:
+  - name: ort-runner
+    image: ghcr.io/developer-overheid-nl/ort-runner:VERSION
+    volumeMounts:
+      - name: ort-config
+        mountPath: /config
+        readOnly: true
+```
+
+## Ontwikkelen en testen
+
+Pull requests bouwen het image en voeren Analyzer, Advisor en Evaluator uit op een
+kleine Git-fixture. Handmatig kan dezelfde imagebouw worden gecontroleerd met:
+
+```sh
+docker build -t ort-config:test .
+mkdir -p /tmp/ort-config-test
+docker run --rm -v /tmp/ort-config-test:/target ort-config:test
+test -s /tmp/ort-config-test/evaluator.rules.kts
+```
+
+De ruleset is gemaakt voor ORT `92.4.0`. Test een ORT-upgrade eerst in de runner
+voordat de vastgezette ORT-image daar wordt gewijzigd.
+
+## Releasen
+
+Net als `don-register-common` gebruikt deze repository een semver Git-tag als trigger:
+
+```sh
+git checkout main
+git pull
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+De workflow valideert de ruleset voordat het image en de GitHub Release worden
+gepubliceerd.
+
+## Licentie
+
+Deze repository is beschikbaar onder de Apache License 2.0. Zie [LICENSE](LICENSE)
+en [NOTICE](NOTICE).
