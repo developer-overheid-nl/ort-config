@@ -87,8 +87,9 @@ containers:
 
 ## Ontwikkelen en testen
 
-Pull requests bouwen het image en voeren Analyzer, Advisor en Evaluator uit op een
-kleine Git-fixture. Handmatig kan dezelfde imagebouw worden gecontroleerd met:
+Pull requests bouwen het image en controleren dat dit exact `evaluator.rules.kts`
+naar het configuratievolume kopieert. Handmatig kan dezelfde imagebouw worden
+gecontroleerd met:
 
 ```sh
 docker build -t ort-config:test .
@@ -97,8 +98,8 @@ docker run --rm -v /tmp/ort-config-test:/target ort-config:test
 test -s /tmp/ort-config-test/evaluator.rules.kts
 ```
 
-De ruleset is gemaakt voor ORT `92.4.0`. Test een ORT-upgrade eerst in de runner
-voordat de vastgezette ORT-image daar wordt gewijzigd.
+De runner is verantwoordelijk voor de compatibiliteitstest van de ruleset met zijn
+vastgezette ORT-versie.
 
 ## Releasen
 
