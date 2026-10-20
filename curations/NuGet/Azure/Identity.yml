@@ -1,5 +1,0 @@
-- id: "NuGet:Azure:Identity:"
-  curations:
-    comment: "The project resides in its own directory."
-    vcs:
-      path: "sdk/identity/Azure.Identity"
