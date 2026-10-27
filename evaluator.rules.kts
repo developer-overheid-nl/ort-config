@@ -89,28 +89,6 @@ fun RuleSet.missingChangelogFileRule() = projectSourceRule("MISSING_CHANGELOG_FI
     warning("The project's code repository does not contain a 'CHANGELOG' or 'CHANGELOG.md' file.")
 }
 
-fun RuleSet.missingCiConfigurationRule() = projectSourceRule("MISSING_CI_CONFIGURATION") {
-    require {
-        -AnyOf(
-            projectSourceHasFile(
-                ".appveyor.yml",
-                ".bitbucket-pipelines.yml",
-                ".gitlab-ci.yml",
-                ".travis.yml"
-            ),
-            projectSourceHasDirectory(
-                ".circleci",
-                ".github/workflows"
-            )
-        )
-    }
-
-    warning(
-        message = "This project does not have any known CI configuration files.",
-        howToFix = "Please set up CI. If CI is already configured, add its path to this rule."
-    )
-}
-
 val ruleSet = ruleSet(ortResult, licenseInfoResolver, resolutionProvider) {
     vulnerabilityInDependencyRule()
     missingReadmeFileRule()
@@ -120,7 +98,6 @@ val ruleSet = ruleSet(ortResult, licenseInfoResolver, resolutionProvider) {
     missingSecurityFileRule()
     missingCodeOfConductFileRule()
     missingChangelogFileRule()
-    missingCiConfigurationRule()
 }
 
 ruleViolations += ruleSet.violations

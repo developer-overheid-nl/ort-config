@@ -16,7 +16,6 @@ alleen [`evaluator.rules.kts`](evaluator.rules.kts) nodig.
 | `SECURITY.md` aanwezig | ERROR |
 | `CODE_OF_CONDUCT.md` aanwezig | WARNING |
 | `CHANGELOG` of `CHANGELOG.md` aanwezig | WARNING |
-| Bekende CI-configuratie aanwezig | WARNING |
 
 `README.md`, `LICENSE`, `publiccode.yml` en `CONTRIBUTING.md` worden in de root
 verwacht. `SECURITY.md`, `CODE_OF_CONDUCT.md` en `CHANGELOG` mogen ook onder
