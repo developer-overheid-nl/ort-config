@@ -1,8 +1,10 @@
 # DON ORT-configuratie
 
 Deze repository bevat de basisregels waarmee de ORT-runner open-sourceprojecten
-uit het OSS-register controleert. De configuratie is bewust klein: de runner heeft
-alleen [`evaluator.rules.kts`](evaluator.rules.kts) nodig.
+uit het OSS-register controleert. De configuratie is bewust klein: de runner gebruikt
+[`evaluator.rules.kts`](evaluator.rules.kts) voor de controles en
+[`rules.yml`](rules.yml) om naast de overtredingen ook de geslaagde regels te
+rapporteren. Een nieuwe regel hoort in beide bestanden; de PR-check vergelijkt ze.
 
 ## Controles
 
@@ -39,7 +41,8 @@ ghcr.io/developer-overheid-nl/ort-config:<commit-sha>
 ## Ontwikkelen en testen
 
 Pull requests bouwen het image en controleren dat dit exact `evaluator.rules.kts`
-naar het configuratievolume kopieert. Handmatig kan dezelfde imagebouw worden
+en `rules.yml` naar het configuratievolume kopieert, en dat beide bestanden dezelfde
+regels noemen. Handmatig kan dezelfde imagebouw worden
 gecontroleerd met:
 
 ```sh
@@ -47,6 +50,7 @@ docker build -t ort-config:test .
 mkdir -p /tmp/ort-config-test
 docker run --rm -v /tmp/ort-config-test:/target ort-config:test
 test -s /tmp/ort-config-test/evaluator.rules.kts
+test -s /tmp/ort-config-test/rules.yml
 ```
 
 De runner is verantwoordelijk voor de compatibiliteitstest van de ruleset met zijn

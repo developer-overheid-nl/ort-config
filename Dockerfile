@@ -7,6 +7,6 @@ LABEL org.opencontainers.image.title="DON ORT configuration" \
       org.opencontainers.image.source="https://github.com/developer-overheid-nl/ort-config" \
       org.opencontainers.image.revision="${SOURCE_REVISION}"
 
-COPY evaluator.rules.kts /config/evaluator.rules.kts
+COPY evaluator.rules.kts rules.yml /config/
 
-CMD ["sh", "-c", "cp /config/evaluator.rules.kts /target/evaluator.rules.kts"]
+CMD ["sh", "-c", "cp /config/evaluator.rules.kts /config/rules.yml /target/"]

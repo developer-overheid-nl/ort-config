@@ -35,7 +35,16 @@ jobs:
           chmod a+rwx "$config"
           docker run --rm -v "${config}:/target" ort-config:test
           cmp evaluator.rules.kts "${config}/evaluator.rules.kts"
-          test "$(find "$config" -type f | wc -l)" -eq 1
+          cmp rules.yml "${config}/rules.yml"
+          test "$(find "$config" -type f | wc -l)" -eq 2
+
+      - name: Check rules manifest
+        run: |
+          set -euo pipefail
+
+          diff \
+            <(grep -oE '(projectSource|package|ortResult|dependency)Rule\("[A-Z_]+"\)' evaluator.rules.kts | grep -oE '[A-Z_]{2,}' | sort) \
+            <(grep -oE 'id: [A-Z_]+' rules.yml | cut -d' ' -f2 | sort)
 
   release:
     name: Publish image and GitHub Release

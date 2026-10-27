@@ -1,0 +1,12 @@
+# Alle regels uit evaluator.rules.kts. De runner gebruikt deze lijst om ook de
+# geslaagde regels te rapporteren; ORT zelf meldt alleen overtredingen.
+# scope: repository = controle op de repository, dependency = controle per package.
+rules:
+- {id: VULNERABILITY_IN_DEPENDENCY, severity: WARNING, scope: dependency}
+- {id: MISSING_README_FILE, severity: ERROR, scope: repository}
+- {id: MISSING_LICENSE_FILE, severity: ERROR, scope: repository}
+- {id: MISSING_PUBLICCODE_FILE, severity: ERROR, scope: repository}
+- {id: MISSING_CONTRIBUTING_FILE, severity: ERROR, scope: repository}
+- {id: MISSING_SECURITY_FILE, severity: ERROR, scope: repository}
+- {id: MISSING_CODE_OF_CONDUCT_FILE, severity: WARNING, scope: repository}
+- {id: MISSING_CHANGELOG_FILE, severity: WARNING, scope: repository}
