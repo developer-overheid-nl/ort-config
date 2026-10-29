@@ -2,3 +2,4 @@
 !Dockerfile
 !evaluator.rules.kts
 !rules.yml
+!config.yml
