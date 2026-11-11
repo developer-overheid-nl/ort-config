@@ -36,7 +36,8 @@ jobs:
           docker run --rm -v "${config}:/target" ort-config:test
           cmp evaluator.rules.kts "${config}/evaluator.rules.kts"
           cmp rules.yml "${config}/rules.yml"
-          test "$(find "$config" -type f | wc -l)" -eq 2
+          cmp config.yml "${config}/config.yml"
+          test "$(find "$config" -type f | wc -l)" -eq 3
 
       - name: Check rules manifest
         run: |

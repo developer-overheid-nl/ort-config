@@ -1,0 +1,10 @@
+# ORT configuration, read by every ORT stage through ORT_CONFIG_DIR.
+ort:
+  analyzer:
+    packageManagers:
+      GradleInspector:
+        options:
+          # The ORT image runs on JDK 25, which Gradle below 9.1 cannot run on.
+          # ORT downloads this JDK for the analysis; Java 17 runs Gradle 7.3
+          # through 9.x and is the minimum for the Android Gradle Plugin 8.
+          javaVersion: "17"
