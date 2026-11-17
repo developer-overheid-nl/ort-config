@@ -1,6 +1,41 @@
 # ORT configuration, read by every ORT stage through ORT_CONFIG_DIR.
 ort:
   analyzer:
+    # Only these package managers run. Without this list ORT runs every
+    # analyzer it finds, also new ones after an ORT upgrade. Based on the
+    # package managers found in the scans of the OSS register.
+    #
+    # Left out, because the analysis runs code from the scanned repository
+    # and few repositories use them: Bazel, Bundler (Gemfile is Ruby),
+    # CocoaPods (Podfile is Ruby), Conan (conanfile.py), Mix (mix.exs),
+    # Rebar3, SBT, Stack, SwiftPM (Package.swift) and Tycho. Carthage and
+    # Gleam are left out as well: no repository uses them.
+    #
+    # GradleInspector and Composer (with a composer.phar in the repository)
+    # also run code from the repository. They stay on, because many
+    # repositories use them. Before prod the worker Pods run without
+    # credentials (ort-runner#23) and with kernel isolation (ort-runner#22).
+    enabledPackageManagers:
+      - Bower
+      - Bun
+      - Cargo
+      - Composer
+      - GitHubAction
+      - GoMod
+      - GradleInspector
+      - Maven
+      - NPM
+      - NuGet
+      - OrtProjectFile
+      - PIP
+      - Pipenv
+      - PNPM
+      - Poetry
+      - Pub
+      - SpdxDocumentFile
+      - Unmanaged
+      - Yarn
+      - Yarn2
     packageManagers:
       GradleInspector:
         options:
