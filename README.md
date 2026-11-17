@@ -15,6 +15,13 @@ version 69`. `config.yml` laat de Gradle-analyse daarom Java 17 gebruiken; ORT
 downloadt die JDK zelf. Java 17 draait Gradle 7.3 tot en met 9.x en is het minimum
 voor de Android Gradle Plugin 8.
 
+`config.yml` zet ook `enabledPackageManagers`. Alleen die analyzers draaien, ook na een
+ORT-upgrade die nieuwe analyzers toevoegt. De lijst volgt de package managers die in de
+scans van het OSS-register voorkomen. Analyzers die code uit de gescande repository
+uitvoeren en weinig gebruikt worden, staan uit: Bazel, Bundler, CocoaPods, Conan, Mix,
+Rebar3, SBT, Stack, SwiftPM en Tycho. Gradle en Composer voeren ook code uit, maar blijven
+aan omdat veel repositories ze gebruiken.
+
 ## Controles
 
 | Controle | Ernst |
